@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} %line - %msg%n
+            </Pattern>
+        </layout>
+    </appender>
+ 	
+ 	<appender name="SIZE_BASED_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${user.home}/trailto-wrapper/logs/trailto-wrapper.log</file>
+		    	<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      		<fileNamePattern>${user.home}/trailto-wrapper/logs/trailto-wrapper.%i.log.zip</fileNamePattern>
+      		<minIndex>1</minIndex>
+      		<maxIndex>9</maxIndex>
+    	</rollingPolicy>
+
+    	<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      		<maxFileSize>10MB</maxFileSize>
+    	</triggeringPolicy>
+    	<encoder>
+      		<pattern>%relative [%thread] %-5level %logger{36} %line - %msg%n</pattern>
+    	</encoder>
+  </appender>
+</configuration>
