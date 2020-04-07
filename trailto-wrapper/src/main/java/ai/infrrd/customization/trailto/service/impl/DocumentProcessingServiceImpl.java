@@ -4,9 +4,11 @@ import ai.infrrd.customization.trailto.commons.AppConstants;
 import ai.infrrd.customization.trailto.entities.DocumentMetaData;
 import ai.infrrd.customization.trailto.entities.GimletResponseV2;
 import ai.infrrd.customization.trailto.exceptions.GimletRequestTimeoutException;
+import ai.infrrd.customization.trailto.service.ApigatewayService;
 import ai.infrrd.customization.trailto.service.DocumentProcessingService;
 import ai.infrrd.customization.trailto.service.GimletService;
 import ai.infrrd.customization.trailto.utils.ByteOperations;
+import ai.infrrd.customization.trailto.vo.ScanDataResponseVO;
 import ai.infrrd.customization.trailto.vo.ScanIdVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Optional;
 
 
 @Service
@@ -30,6 +34,11 @@ public class DocumentProcessingServiceImpl implements DocumentProcessingService
 
     private WorkerThread workerThread;
 
+    private FilterService filterService;
+
+    private ViewService viewService;
+
+    private ApigatewayService apiGatewayService;
 
     @Autowired
     public void setGimletService( GimletService gimletService )
@@ -43,10 +52,48 @@ public class DocumentProcessingServiceImpl implements DocumentProcessingService
         this.workerThread = workerThread;
     }
 
+    @Autowired
+    public void setFilterService( FilterService filterService ) { this.filterService = filterService; }
+
+    @Autowired
+    public void setViewService( ViewService viewService ) { this.viewService = viewService; }
+
+    @Autowired
+    public void setApiGatewayService( ApigatewayService gatewayService ) { this.apiGatewayService = gatewayService; }
+
     @Override
     public GimletResponseV2 getByScanId( String scanId, String xcci )
     {
-        return gimletService.getByScanId( scanId, xcci, AppConstants.RECEIPT_PROFILE );
+
+        Optional<ScanDataResponseVO> optionalScanData = apiGatewayService.apigatewayGetCall( xcci, scanId );
+
+        ScanDataResponseVO scannedData = null;
+        GimletResponseV2 gimletResponseV2 = null;
+
+        if ( optionalScanData.isPresent() ) {
+            scannedData = optionalScanData.get();
+            LOG.info( "Api gateway get call is successfull." );
+            LOG.debug( "Api gateway response: {}", scannedData );
+
+            if ( scannedData.getData().getWrapperLineItems() != null ) {
+                LOG.info( "Wrapper fields are updated in apigateway.. returning same response..." );
+                scannedData.getData().setFields( scannedData.getData().getWrapperFields() );
+                scannedData.getData().setLineItems( scannedData.getData().getWrapperLineItems() );
+
+                //If updated wrapper fields are already present in ES, then just get the view object and return.
+                return viewService.toViewObject( scannedData );
+            } else {
+                LOG.warn( "Wrapper fields are not yet updated in ES!! Updating data from apigateway." );
+                filterService.filterGimletResponse( scannedData );
+                return viewService.toViewObject( scannedData );
+            }
+        }
+
+        LOG.warn( "Falling back to gimlet call as API gateway Get call failed.." );
+
+        gimletResponseV2 = gimletService.getByScanId( scanId, xcci, AppConstants.RECEIPT_PROFILE );
+        filterService.filterGimletResponse( gimletResponseV2 );
+        return viewService.toViewObject( gimletResponseV2 );
     }
 
 

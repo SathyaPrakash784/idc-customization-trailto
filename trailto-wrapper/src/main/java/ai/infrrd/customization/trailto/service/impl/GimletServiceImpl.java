@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 
         if ( LOG.isInfoEnabled() ) {
             //Will be executed only once.
-            LOG.info( "Initialized gimlet invoice extraction parameters: \n {}",
+            LOG.info( "Initialized gimlet receipt extraction parameters: \n {}",
                 new GsonBuilder().setPrettyPrinting().create().toJson( receiptParameters ) );
         }
     }

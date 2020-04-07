@@ -1,6 +1,7 @@
 package ai.infrrd.customization.trailto.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-
+@JsonIgnoreProperties (ignoreUnknown = true)
 public class ScanRequestVOV2 implements Serializable
 {
     private String scanId;
@@ -28,6 +29,13 @@ public class ScanRequestVOV2 implements Serializable
     private List<Object> lineItems;
 
     private String rawText;
+
+    @JsonInclude ( JsonInclude.Include.NON_NULL)
+    @JsonSerialize ( using = CustomMapSerializer.class)
+    private Map<String, Object> wrapperFields;
+
+    @JsonInclude ( JsonInclude.Include.NON_NULL)
+    private List<Object> wrapperLineItems;
 
     @JsonIgnore
     private String status;
@@ -135,6 +143,28 @@ public class ScanRequestVOV2 implements Serializable
         this.licenseConsumed = licenseConsumed;
     }
 
+    public Map<String, Object> getWrapperFields()
+    {
+        return wrapperFields;
+    }
+
+
+    public void setWrapperFields( Map<String, Object> wrapperFields )
+    {
+        this.wrapperFields = wrapperFields;
+    }
+
+
+    public List<Object> getWrapperLineItems()
+    {
+        return wrapperLineItems;
+    }
+
+
+    public void setWrapperLineItems( List<Object> wrapperLineItems )
+    {
+        this.wrapperLineItems = wrapperLineItems;
+    }
 
     public String getHashId()
     {
