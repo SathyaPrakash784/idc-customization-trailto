@@ -26,7 +26,7 @@ public class TrailtoRestController
     DocumentProcessingService documentService;
 
 
-    @PostMapping ( value = "/trialto/receipt/", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @PostMapping ( value = "/trialto/receipt", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public DeferredResult<ResponseEntity<?>> postResponse( @RequestHeader ( "X-Consumer-Custom-ID") String xcci,
         @RequestBody MultipartFile file, @RequestParam ( required = false, defaultValue = "false") boolean willWait )
     {
